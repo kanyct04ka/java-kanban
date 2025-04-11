@@ -15,9 +15,14 @@ public class TaskManager {
         subtaskList = new HashMap<>();
     }
 
+    private static int generateTaskId() {
+        taskCount++;
+        return taskCount;
+    }
+
     // МЕТОДЫ ДЛЯ РАБОТЫ С ЗАДАЧАМИ
     public Task createTask(String name, String description) {
-        taskCount++;
+        generateTaskId();
         Task newTask = new Task(taskCount, name, description, TaskStatus.NEW);
         taskList.put(taskCount, newTask);
         return newTask;
@@ -45,7 +50,7 @@ public class TaskManager {
 
     // МЕТОДЫ ДЛЯ РАБОТЫ С ЭПИКАМИ
     public Epic createEpic(String name, String description) {
-        taskCount++;
+        generateTaskId();
         Epic newEpic = new Epic(taskCount, name, description, TaskStatus.NEW, new ArrayList<Subtask>());
         epicList.put(taskCount, newEpic);
         return newEpic;
@@ -107,7 +112,7 @@ public class TaskManager {
 
     // МЕТОДЫ ДЛЯ РАБОТЫ С ПОДЗАДАЧАМИ
     public Subtask createSubtask(String name, String description, Epic epicLink) {
-        taskCount++;
+        generateTaskId();
         Subtask newSubtask = new Subtask(taskCount, name, description, TaskStatus.NEW, epicLink);
         subtaskList.put(taskCount, newSubtask);
         defineEpicStatus(epicLink);  // имеет смысл только если эпик закрыт, но вопрос можно ли добавлять подзадачи в закрытый эпик?
