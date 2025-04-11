@@ -22,9 +22,9 @@ public class TaskManager {
 
     // МЕТОДЫ ДЛЯ РАБОТЫ С ЗАДАЧАМИ
     public Task createTask(String name, String description) {
-        generateTaskId();
-        Task newTask = new Task(taskCount, name, description, TaskStatus.NEW);
-        taskList.put(taskCount, newTask);
+        var id = generateTaskId();
+        Task newTask = new Task(id, name, description, TaskStatus.NEW);
+        taskList.put(id, newTask);
         return newTask;
     }
 
@@ -50,9 +50,9 @@ public class TaskManager {
 
     // МЕТОДЫ ДЛЯ РАБОТЫ С ЭПИКАМИ
     public Epic createEpic(String name, String description) {
-        generateTaskId();
-        Epic newEpic = new Epic(taskCount, name, description, TaskStatus.NEW, new ArrayList<Subtask>());
-        epicList.put(taskCount, newEpic);
+        var id = generateTaskId();
+        Epic newEpic = new Epic(id, name, description, TaskStatus.NEW, new ArrayList<Subtask>());
+        epicList.put(id, newEpic);
         return newEpic;
     }
 
@@ -112,9 +112,9 @@ public class TaskManager {
 
     // МЕТОДЫ ДЛЯ РАБОТЫ С ПОДЗАДАЧАМИ
     public Subtask createSubtask(String name, String description, Epic epicLink) {
-        generateTaskId();
-        Subtask newSubtask = new Subtask(taskCount, name, description, TaskStatus.NEW, epicLink);
-        subtaskList.put(taskCount, newSubtask);
+        var id = generateTaskId();
+        Subtask newSubtask = new Subtask(id, name, description, TaskStatus.NEW, epicLink);
+        subtaskList.put(id, newSubtask);
         defineEpicStatus(epicLink);  // имеет смысл только если эпик закрыт, но вопрос можно ли добавлять подзадачи в закрытый эпик?
         return newSubtask;
     }
