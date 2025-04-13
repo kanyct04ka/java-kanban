@@ -1,3 +1,9 @@
+package ru.tracker.controller;
+
+import ru.tracker.model.Epic;
+import ru.tracker.model.Subtask;
+import ru.tracker.model.Task;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -21,11 +27,11 @@ public class TaskManager {
     }
 
     // МЕТОДЫ ДЛЯ РАБОТЫ С ЗАДАЧАМИ
-    public Task createTask(String name, String description) {
+    public Task addTask(Task task) {
         var id = generateTaskId();
-        Task newTask = new Task(id, name, description, TaskStatus.NEW);
-        taskList.put(id, newTask);
-        return newTask;
+        task.setId(id);
+        taskList.put(id, task);
+        return task;
     }
 
     public Task getTask(int id) {
@@ -49,15 +55,19 @@ public class TaskManager {
     }
 
     // МЕТОДЫ ДЛЯ РАБОТЫ С ЭПИКАМИ
-    public Epic createEpic(String name, String description) {
+    public Epic addEpic(Epic epic) {
         var id = generateTaskId();
-        Epic newEpic = new Epic(id, name, description, TaskStatus.NEW, new ArrayList<Subtask>());
-        epicList.put(id, newEpic);
-        return newEpic;
+        epic.setId(id);
+        epicList.put(id, epic);
+        return epic;
     }
 
-    public Task getEpic(int id) {
+    public Epic getEpic(int id) {
         return epicList.get(id);
+    }
+
+    public ArrayList<Subtask> getEpicSubtasks(Epic epic) {
+        return epic.getSubtasks();
     }
 
     public void updateEpic(Epic epic) {
@@ -69,54 +79,26 @@ public class TaskManager {
     }
 
     public void removeEpic(int id) {
+        for (Subtask subtask : epicList.get(id).getSubtasks()) {
+            subtaskList.remove(subtask.getId());
+        }
         epicList.remove(id);
     }
 
     public void removeAllEpics() {
         epicList.clear();
-    }
-
-    private void defineEpicStatus(Epic epic) {
-        TaskStatus newEpicStatus;
-        ArrayList<Subtask> epicSubtasks = epic.getSubtasks();
-
-        if (epicSubtasks.isEmpty()) {
-            newEpicStatus = TaskStatus.NEW;
-        } else {
-            boolean isAllSubtasksNew = true;
-            boolean isAllSubtasksDone = true;
-            for (Subtask subtask : epicSubtasks) {
-                if (!(subtask.getStatus() == TaskStatus.NEW)) {
-                    isAllSubtasksNew = false;
-                }
-                if (!(subtask.getStatus() == TaskStatus.DONE)) {
-                    isAllSubtasksDone = false;
-                }
-                if (!isAllSubtasksNew || !isAllSubtasksDone) {
-                    break;
-                }
-            }
-
-            if (isAllSubtasksNew) {
-                newEpicStatus = TaskStatus.NEW;
-            } else if (isAllSubtasksDone) {
-                newEpicStatus = TaskStatus.DONE;
-            } else {
-                newEpicStatus = TaskStatus.IN_PROGRESS;
-            }
-        }
-
-        Epic updatedEpic = new Epic(epic.getId(), epic.getName(), epic.getDescription(), newEpicStatus, epicSubtasks);
-        epicList.put(epic.getId(), updatedEpic);
+        subtaskList.clear();
     }
 
     // МЕТОДЫ ДЛЯ РАБОТЫ С ПОДЗАДАЧАМИ
-    public Subtask createSubtask(String name, String description, Epic epicLink) {
+    public Subtask addSubtask(Subtask subtask, Epic epic) {
         var id = generateTaskId();
-        Subtask newSubtask = new Subtask(id, name, description, TaskStatus.NEW, epicLink);
-        subtaskList.put(id, newSubtask);
-        defineEpicStatus(epicLink);  // имеет смысл только если эпик закрыт, но вопрос можно ли добавлять подзадачи в закрытый эпик?
-        return newSubtask;
+        subtask.setId(id);
+        // исходим из того, что сама сабтаска как простая задача создается где-то во вне,
+        // а управление и связка с эпиком обеспечивается ТаскМенеджером
+        subtask.setEpicLink(epic);
+        subtaskList.put(id, subtask);
+        return subtask;
     }
 
     public Subtask getSubtask(int id) {
@@ -125,7 +107,7 @@ public class TaskManager {
 
     public void updateSubtask(Subtask subtask) {
         subtaskList.put(subtask.getId(), subtask);
-        defineEpicStatus(subtask.getEpicLink());
+        subtask.getEpicLink().defineStatus();
     }
 
     public Collection<Subtask> getSubtaskList() {
@@ -138,7 +120,6 @@ public class TaskManager {
         if (subtask != null) {
             var epic = subtask.getEpicLink();
             epic.removeLinkedSubtask(subtask);
-            defineEpicStatus(epic);
         }
     }
 
@@ -146,7 +127,6 @@ public class TaskManager {
         subtaskList.clear();
         for (Epic epic : epicList.values()) {
             epic.removeAllLinkedSubtask();
-            defineEpicStatus(epic);
         }
     }
 }

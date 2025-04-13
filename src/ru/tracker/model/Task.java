@@ -1,3 +1,5 @@
+package ru.tracker.model;
+
 public class Task {
 
     private int id;
@@ -5,11 +7,14 @@ public class Task {
     private String description;
     private TaskStatus status;
 
-    public Task(int id, String name, String description, TaskStatus status) {
-        this.id = id;
+    public Task(String name, String description, TaskStatus status) {
         this.name = name;
         this.description = description;
         this.status = status;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public int getId() {
@@ -24,7 +29,11 @@ public class Task {
         return description;
     }
 
-    protected TaskStatus getStatus() {
+    public void setStatus(TaskStatus newStatus) {
+        this.status = newStatus;
+    }
+
+    public TaskStatus getStatus() {
         return status;
     }
 
