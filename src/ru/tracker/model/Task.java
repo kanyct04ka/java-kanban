@@ -1,5 +1,7 @@
 package ru.tracker.model;
 
+import java.util.Objects;
+
 public class Task {
 
     private int id;
@@ -45,5 +47,22 @@ public class Task {
                 ", description='" + description + '\'' +
                 ", status=" + status +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Task task = (Task) o;
+        return Objects.equals(name, task.name) && Objects.equals(description, task.description) && status == task.status;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hashCode(name);
+        result = 31 * result + Objects.hashCode(description);
+        result = 31 * result + Objects.hashCode(status);
+        return result;
     }
 }
