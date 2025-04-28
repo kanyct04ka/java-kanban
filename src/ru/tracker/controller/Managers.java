@@ -6,12 +6,10 @@ public abstract class Managers {
     public static TaskManager getDefault() {
 //        в ТЗ данного спринта не описана логика, предъявляемая к данному методу
 //        поэтому добавлено пока так
-        TaskManager taskManager = new InMemoryTaskManager();
-        return taskManager;
+        return new InMemoryTaskManager();
     }
 
-    public static HistoryManager<Task> getDefaultHistory() {
-        HistoryManager<Task> historyManager = new InMemoryHistoryManager();
-        return historyManager;
+    public static HistoryManager getDefaultHistory() {
+        return new InMemoryHistoryManager();
     }
 }

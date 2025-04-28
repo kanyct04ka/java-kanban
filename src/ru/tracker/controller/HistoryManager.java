@@ -4,8 +4,8 @@ import ru.tracker.model.Task;
 
 import java.util.ArrayList;
 
-public interface HistoryManager<T extends Task> {
+public interface HistoryManager {
 
-    void add(T task);
+    void add(Task task);
     ArrayList<Task> getHistory();
 }

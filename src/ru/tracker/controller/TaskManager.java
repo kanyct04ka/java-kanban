@@ -9,6 +9,8 @@ import java.util.Collection;
 
 public interface TaskManager {
 
+    ArrayList<Task> getHistory();
+
     // МЕТОДЫ ДЛЯ РАБОТЫ С ЗАДАЧАМИ
     Task addTask(Task task);
     Task getTask(int id);

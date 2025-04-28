@@ -31,6 +31,11 @@ public class InMemoryTaskManager implements TaskManager {
         return historyManager;
     }
 
+    @Override
+    public ArrayList<Task> getHistory() {
+        return historyManager.getHistory();
+    }
+
     private int generateTaskId() {
         this.taskCount++;
         return this.taskCount;
