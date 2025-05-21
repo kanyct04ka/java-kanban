@@ -48,7 +48,7 @@ public class InMemoryHistoryManager implements HistoryManager {
         if (historyHead != null) {
             list.add(historyHead.getTask());
             var next = historyHead.getNext();
-            while(next != null) {
+            while (next != null) {
                 list.add(next.getTask());
                 next = next.getNext();
             }
@@ -81,40 +81,40 @@ public class InMemoryHistoryManager implements HistoryManager {
         // условие ниже будет отрабатывать только для нод между
         var prev = node.getPrev();
         var next = node.getNext();
-        if (prev !=null && next != null) {
+        if (prev != null && next != null) {
             prev.setNext(next);
             next.setPrev(prev);
         }
     }
 
+    class Node {
+        private Node prev;
+        private Node next;
+        private final Task task;
+
+        Node(Task task) {
+            this.task = task;
+        }
+
+        void setPrev(Node prev) {
+            this.prev = prev;
+        }
+
+        void setNext(Node next) {
+            this.next = next;
+        }
+
+        Node getPrev() {
+            return prev;
+        }
+
+        Node getNext() {
+            return next;
+        }
+
+        Task getTask() {
+            return task;
+        }
+    }
 }
 
-class Node {
-    private Node prev;
-    private Node next;
-    private final Task task;
-
-    Node(Task task) {
-        this.task = task;
-    }
-
-    void setPrev(Node prev) {
-        this.prev = prev;
-    }
-
-    void setNext(Node next) {
-        this.next = next;
-    }
-
-    Node getPrev() {
-        return prev;
-    }
-
-    Node getNext() {
-        return next;
-    }
-
-    Task getTask() {
-        return task;
-    }
-}
