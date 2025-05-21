@@ -1,6 +1,5 @@
 package ru.tracker.controller;
 
-import ru.tracker.model.Task;
 
 public abstract class Managers {
     public static TaskManager getDefault() {

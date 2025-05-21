@@ -4,9 +4,10 @@ import ru.tracker.model.Epic;
 import ru.tracker.model.Subtask;
 import ru.tracker.model.Task;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
+
 
 public class InMemoryTaskManager implements TaskManager {
 
@@ -32,7 +33,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public ArrayList<Task> getHistory() {
+    public List<Task> getHistory() {
         return historyManager.getHistory();
     }
 
@@ -72,11 +73,15 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void removeTask(int id) {
+        historyManager.remove(id);
         taskList.remove(id);
     }
 
     @Override
     public void removeAllTasks() {
+        for (Integer id : taskList.keySet()) {
+            historyManager.remove(id);
+        }
         taskList.clear();
     }
 
@@ -91,7 +96,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Epic getEpic(int id) {
-        Epic task = epicList.get(id);
+        var task = epicList.get(id);
         if (task != null) {
             historyManager.add(task);
         }
@@ -99,7 +104,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public ArrayList<Subtask> getEpicSubtasks(Epic epic) {
+    public List<Subtask> getEpicSubtasks(Epic epic) {
         return epic.getSubtasks();
     }
 
@@ -116,15 +121,20 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void removeEpic(int id) {
         for (Subtask subtask : epicList.get(id).getSubtasks()) {
+            historyManager.remove(subtask.getId());
             subtaskList.remove(subtask.getId());
         }
         epicList.remove(id);
+        historyManager.remove(id);
     }
 
     @Override
     public void removeAllEpics() {
+        removeAllSubtasks();
+        for (Integer id : epicList.keySet()) {
+            historyManager.remove(id);
+        }
         epicList.clear();
-        subtaskList.clear();
     }
 
     // МЕТОДЫ ДЛЯ РАБОТЫ С ПОДЗАДАЧАМИ
@@ -162,6 +172,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void removeSubtask(int id) {
         var subtask = subtaskList.get(id);
+        historyManager.remove(id);
         subtaskList.remove(id);
         if (subtask != null) {
             var epic = subtask.getEpicLink();
@@ -171,6 +182,9 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void removeAllSubtasks() {
+        for (Integer id : subtaskList.keySet()) {
+            historyManager.remove(id);
+        }
         subtaskList.clear();
         for (Epic epic : epicList.values()) {
             epic.removeAllLinkedSubtask();
