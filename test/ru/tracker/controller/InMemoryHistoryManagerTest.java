@@ -16,12 +16,10 @@ import static org.junit.jupiter.api.Assertions.*;
 class InMemoryHistoryManagerTest {
 
     InMemoryTaskManager taskManager;
-    HistoryManager historyManager;
 
     @BeforeEach
     void createManagers() {
         taskManager = new InMemoryTaskManager();
-        historyManager = taskManager.getHistoryManager();
     }
 
     @Test
@@ -30,7 +28,7 @@ class InMemoryHistoryManagerTest {
             Task task = new Task("task name " + i, "task description " + i, TaskStatus.NEW);
             int id = taskManager.addTask(task).getId();
             taskManager.getTask(id);
-            assertEquals(i, historyManager.getHistory().size());
+            assertEquals(i, taskManager.getHistory().size());
         }
     }
 
@@ -45,7 +43,7 @@ class InMemoryHistoryManagerTest {
                 taskManager.removeTask(id);
             }
         }
-        assertEquals(x-1, historyManager.getHistory().size());
+        assertEquals(x-1, taskManager.getHistory().size());
     }
 
     @Test
@@ -59,7 +57,7 @@ class InMemoryHistoryManagerTest {
             checkList.add(task);
         }
 
-        List<Task> history = historyManager.getHistory();
+        List<Task> history = taskManager.getHistory();
         for (int i = 0; i < x; i++) {
             assertEquals(checkList.get(i), history.get(i));
         }
@@ -78,7 +76,7 @@ class InMemoryHistoryManagerTest {
             }
         }
         taskManager.removeTask(1);
-        assertEquals(check, historyManager.getHistory().get(0));
+        assertEquals(check, taskManager.getHistory().get(0));
     }
 
     @Test
@@ -94,7 +92,7 @@ class InMemoryHistoryManagerTest {
             }
         }
         taskManager.removeTask(x);
-        var history = historyManager.getHistory();
+        var history = taskManager.getHistory();
         assertEquals(check, history.getLast());
     }
 
@@ -109,7 +107,7 @@ class InMemoryHistoryManagerTest {
         }
 
         check = taskManager.getTask(2);
-        var history = historyManager.getHistory();
+        var history = taskManager.getHistory();
         for (int i = 1; i <= x; i++) {
             if (i == x) {
                 assertEquals(check, history.getLast());
