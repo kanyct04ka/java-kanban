@@ -27,4 +27,10 @@ public class Subtask extends Task {
                 ", epicLink=" + epicLink.getId() +
                 '}';
     }
+
+    @Override
+    public String toStringForSaving() {
+        return getId() + ";" + "SUBTASK" + ";" + getName()  +
+                ";" + getStatus().toString() + ";" + getDescription() + ";" + epicLink.getId();
+    }
 }

@@ -2,16 +2,13 @@ package ru.tracker.controller;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
-import ru.tracker.model.Epic;
-import ru.tracker.model.Subtask;
-import ru.tracker.model.Task;
-import ru.tracker.model.TaskStatus;
+import ru.tracker.model.*;
 
 import java.util.List;
 import java.util.ArrayList;
 
-import static org.junit.jupiter.api.Assertions.*;
 
 class InMemoryHistoryManagerTest {
 

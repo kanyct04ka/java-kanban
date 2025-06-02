@@ -73,4 +73,10 @@ public class Epic extends Task {
                 ", subtasks=" + subtasks.size() +
                 '}';
     }
+
+    @Override
+    public String toStringForSaving() {
+        return getId() + ";" + "EPIC" + ";" + getName()  +
+                ";" + getStatus().toString() + ";" + getDescription() + ";";
+    }
 }

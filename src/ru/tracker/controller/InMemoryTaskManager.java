@@ -13,9 +13,9 @@ public class InMemoryTaskManager implements TaskManager {
 
     private int taskCount;
 
-    private HashMap<Integer, Task> taskList;
-    private HashMap<Integer, Epic> epicList;
-    private HashMap<Integer, Subtask> subtaskList;
+    private final HashMap<Integer, Task> taskList;
+    private final HashMap<Integer, Epic> epicList;
+    private final HashMap<Integer, Subtask> subtaskList;
 
     private final HistoryManager historyManager;
 
@@ -40,6 +40,14 @@ public class InMemoryTaskManager implements TaskManager {
     private int generateTaskId() {
         this.taskCount++;
         return this.taskCount;
+    }
+
+    protected int getTaskCount() {
+        return taskCount;
+    }
+
+    protected void setTaskCount(int count) {
+        taskCount = count;
     }
 
 
