@@ -1,5 +1,7 @@
 package ru.tracker.controller;
 
+import ru.tracker.exceptions.ManagerLoadException;
+import ru.tracker.exceptions.ManagerSaveException;
 import ru.tracker.model.*;
 
 import java.io.*;
@@ -26,7 +28,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         // пусть у нас будет какая-то логика формирования файла для хранения
         // возможно на основе даты или чего-либо еще
         // пока что просто заглушка
-        return new File("backup.csv");
+        return new File("resources/backup.csv");
     }
 
     public static FileBackedTaskManager loadFromFile(File file) {
@@ -45,7 +47,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 tasksForUpload.add(line.split(";"));
             }
         } catch (IOException exception) {
-            exception.printStackTrace();
+            throw new ManagerLoadException("Ошибка при чтении из файла: " + exception.getMessage());
         }
 
         if (!tasksForUpload.isEmpty()) {
@@ -84,7 +86,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         return fileBackedTaskManager;
     }
 
-    private void save() throws ManagerSaveException {
+    private void save() {
         // при каждом изменении состояния снепшота файл полностью перезаписывается
         try (FileWriter fileWriter = new FileWriter(backupFile)) {
             if (!getTaskList().isEmpty()) {
@@ -107,7 +109,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 }
             }
         } catch (IOException exception) {
-            throw new ManagerSaveException("Ошибка сохранения снепшота задач в файл");
+            throw new ManagerSaveException("Ошибка сохранения снепшота задач в файл: " +
+                    exception.getMessage());
         }
     }
 
@@ -115,125 +118,77 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     @Override
     public Task addTask(Task task) {
         var fTask = super.addTask(task);
-        try {
-            save();
-        } catch (ManagerSaveException exception) {
-            System.out.println(exception.getMessage());
-        }
+        save();
         return fTask;
     }
 
     @Override
     public void updateTask(Task task) {
         super.updateTask(task);
-        try {
-            save();
-        } catch (ManagerSaveException exception) {
-            System.out.println(exception.getMessage());
-        }
+        save();
     }
 
     @Override
     public void removeTask(int id) {
         super.removeTask(id);
-        try {
-            save();
-        } catch (ManagerSaveException exception) {
-            System.out.println(exception.getMessage());
-        }
+        save();
     }
 
     @Override
     public void removeAllTasks() {
         super.removeAllTasks();
-        try {
-            save();
-        } catch (ManagerSaveException exception) {
-            System.out.println(exception.getMessage());
-        }
+        save();
     }
 
     // МЕТОДЫ ДЛЯ РАБОТЫ С ЭПИКАМИ
     @Override
     public Epic addEpic(Epic epic) {
         var fEpic = super.addEpic(epic);
-        try {
-            save();
-        } catch (ManagerSaveException exception) {
-            System.out.println(exception.getMessage());
-        }
+        save();
         return fEpic;
     }
 
     @Override
     public void updateEpic(Epic epic) {
         super.updateEpic(epic);
-        try {
-            save();
-        } catch (ManagerSaveException exception) {
-            System.out.println(exception.getMessage());
-        }
+        save();
     }
 
     @Override
     public void removeEpic(int id) {
         super.removeEpic(id);
-        try {
-            save();
-        } catch (ManagerSaveException exception) {
-            System.out.println(exception.getMessage());
-        }
+        save();
     }
 
     @Override
     public void removeAllEpics() {
         super.removeAllEpics();
-        try {
-            save();
-        } catch (ManagerSaveException exception) {
-            System.out.println(exception.getMessage());
-        }
+        save();
     }
 
     // МЕТОДЫ ДЛЯ РАБОТЫ С ПОДЗАДАЧАМИ
     @Override
     public Subtask addSubtask(Subtask subtask, Epic epic) {
         var fSubtask = super.addSubtask(subtask, epic);
-        try {
-            save();
-        } catch (ManagerSaveException exception) {
-            System.out.println(exception.getMessage());
-        }
+        save();
         return fSubtask;
     }
 
     @Override
     public void updateSubtask(Subtask subtask) {
         super.updateSubtask(subtask);
-        try {
-            save();
-        } catch (ManagerSaveException exception) {
-            System.out.println(exception.getMessage());
-        }
+        save();
     }
 
     @Override
     public void removeSubtask(int id) {
         super.removeSubtask(id);
-        try {
-            save();
-        } catch (ManagerSaveException exception) {
-            System.out.println(exception.getMessage());
-        }
+        save();
     }
 
     @Override
     public void removeAllSubtasks() {
         super.removeAllSubtasks();
-        try {
-            save();
-        } catch (ManagerSaveException exception) {
-            System.out.println(exception.getMessage());
-        }
+        save();
     }
 }
