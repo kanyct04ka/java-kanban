@@ -65,4 +65,12 @@ public class Task {
         result = 31 * result + Objects.hashCode(status);
         return result;
     }
+
+    // формат для сохранения в файл CSV с разделителем ;
+    // id,type,name,status,description,epic
+    // вынесен в отдельный метод т.к. это отдельная задача
+    public String toStringForSaving() {
+        return id + ";" + "TASK" + ";" + name  +
+                ";" + status.toString() + ";" + description + ";";
+    }
 }
