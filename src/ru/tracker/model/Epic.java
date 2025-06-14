@@ -86,7 +86,7 @@ public class Epic extends Task {
             setEndTime(null);
             setDuration(null);
         }
-    };
+    }
 
     public void addLinkedSubtasks(Subtask subtask) {
         // перед добавлением в списке связанных подзадач
