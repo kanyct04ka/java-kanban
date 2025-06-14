@@ -4,9 +4,7 @@ import ru.tracker.model.Epic;
 import ru.tracker.model.Subtask;
 import ru.tracker.model.Task;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 
 public class InMemoryTaskManager implements TaskManager {
@@ -16,6 +14,7 @@ public class InMemoryTaskManager implements TaskManager {
     private final HashMap<Integer, Task> taskList;
     private final HashMap<Integer, Epic> epicList;
     private final HashMap<Integer, Subtask> subtaskList;
+    private final Set<Task> prioritizedTasks;
 
     private final HistoryManager historyManager;
 
@@ -24,6 +23,8 @@ public class InMemoryTaskManager implements TaskManager {
         this.taskList = new HashMap<>();
         this.epicList = new HashMap<>();
         this.subtaskList = new HashMap<>();
+
+        this.prioritizedTasks = new TreeSet<>(Comparator.comparing(task -> task.getStartTime().get()));
 
         this.historyManager = Managers.getDefaultHistory();
     }
@@ -50,6 +51,30 @@ public class InMemoryTaskManager implements TaskManager {
         taskCount = count;
     }
 
+    @Override
+    public Set<Task> getPrioritizedTasks() {
+        return prioritizedTasks;
+    }
+
+    // чтобы в нескольких методах не прописывать проверку на заполненность optional
+    // сделал не метод проверки пересечений задач, а метод приоритизации задач
+    // который проверяет и наличие дат и пересечений и добавляет в список приоритетов
+    private void prioritize(Task task) {
+        if (task.getStartTime().isEmpty() && task.getDuration().isEmpty()) {
+            return;
+        }
+
+        // optional-ы проверены в предшествующем if
+        for (Task prioritizedTask : prioritizedTasks) {
+            if (prioritizedTask.getEndTime().get().isAfter(task.getStartTime().get())
+                    && prioritizedTask.getStartTime().get().isBefore(task.getEndTime().get())
+            ) {
+                return;
+            }
+        }
+
+        prioritizedTasks.add(task);
+    }
 
     // МЕТОДЫ ДЛЯ РАБОТЫ С ЗАДАЧАМИ
     @Override
@@ -57,6 +82,7 @@ public class InMemoryTaskManager implements TaskManager {
         var id = generateTaskId();
         task.setId(id);
         taskList.put(id, task);
+        prioritize(task);
         return task;
     }
 
@@ -71,6 +97,13 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void updateTask(Task task) {
+        // из списка приоритизированных удаляем сначала предыдущую версию задачи
+        var previousVersion = taskList.get(task.getId());
+        if (previousVersion != null) {
+            prioritizedTasks.remove(previousVersion);
+        }
+        prioritize(task);
+
         taskList.put(task.getId(), task);
     }
 
@@ -81,6 +114,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void removeTask(int id) {
+        prioritizedTasks.remove(taskList.get(id));
         historyManager.remove(id);
         taskList.remove(id);
     }
@@ -88,6 +122,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void removeAllTasks() {
         for (Integer id : taskList.keySet()) {
+            prioritizedTasks.remove(taskList.get(id));
             historyManager.remove(id);
         }
         taskList.clear();
@@ -150,10 +185,11 @@ public class InMemoryTaskManager implements TaskManager {
     public Subtask addSubtask(Subtask subtask, Epic epic) {
         var id = generateTaskId();
         subtask.setId(id);
-        // исходим из того, что сама сабтаска как простая задача создается где-то во вне,
+        // исходим из того, что сама подзадача как простая задача создается где-то во вне,
         // а управление и связка с эпиком обеспечивается ТаскМенеджером
         subtask.setEpicLink(epic);
         subtaskList.put(id, subtask);
+        prioritize(subtask);
         return subtask;
     }
 
@@ -168,8 +204,13 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void updateSubtask(Subtask subtask) {
+        var previousVersion = subtaskList.get(subtask.getId());
+        if (previousVersion != null) {
+            prioritizedTasks.remove(previousVersion);
+        }
+        prioritize(subtask);
+
         subtaskList.put(subtask.getId(), subtask);
-        subtask.getEpicLink().defineStatus();
     }
 
     @Override
@@ -180,6 +221,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void removeSubtask(int id) {
         var subtask = subtaskList.get(id);
+        prioritizedTasks.remove(subtask);
         historyManager.remove(id);
         subtaskList.remove(id);
         if (subtask != null) {
@@ -191,6 +233,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void removeAllSubtasks() {
         for (Integer id : subtaskList.keySet()) {
+            prioritizedTasks.remove(subtaskList.get(id));
             historyManager.remove(id);
         }
         subtaskList.clear();
