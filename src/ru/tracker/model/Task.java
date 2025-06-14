@@ -1,6 +1,10 @@
 package ru.tracker.model;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
+import java.util.Optional;
 
 public class Task {
 
@@ -8,6 +12,8 @@ public class Task {
     private String name;
     private String description;
     private TaskStatus status;
+    private LocalDateTime startTime;
+    private Duration duration;
 
     public Task(String name, String description, TaskStatus status) {
         this.name = name;
@@ -15,10 +21,40 @@ public class Task {
         this.status = status;
     }
 
+    /* пока не понятно нужен ли отдельно такой конструктор ?
+    public Task(
+            String name,
+            String description,
+            TaskStatus status,
+            LocalDateTime startTime,
+            Duration duration
+    ) {
+        this.name = name;
+        this.description = description;
+        this.status = status;
+        this.startTime = startTime;
+        this.duration = duration;
+    }
+     */
+
+    // СЕТТЕРЫ
     public void setId(int id) {
         this.id = id;
     }
 
+    public void setStatus(TaskStatus newStatus) {
+        this.status = newStatus;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public void setDuration(Duration duration) {
+        this.duration = duration;
+    }
+
+    // ГЕТТЕРЫ
     public int getId() {
         return id;
     }
@@ -31,24 +67,26 @@ public class Task {
         return description;
     }
 
-    public void setStatus(TaskStatus newStatus) {
-        this.status = newStatus;
-    }
-
     public TaskStatus getStatus() {
         return status;
     }
 
-    @Override
-    public String toString() {
-        return "Task{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", status=" + status +
-                '}';
+    public Optional<LocalDateTime> getStartTime() {
+        return Optional.ofNullable(startTime);
     }
 
+    public Optional<Duration> getDuration() {
+        return Optional.ofNullable(duration);
+    }
+
+    public Optional<LocalDateTime> getEndTime() {
+        if (getStartTime().isEmpty() || getDuration().isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(startTime.plus(duration));
+    }
+
+    // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -66,11 +104,38 @@ public class Task {
         return result;
     }
 
+    @Override
+    public String toString() {
+        String strStart = getStartTime().isEmpty() ? "not filled"
+                : getStartTime().get().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+        String strDuration = getDuration().isEmpty() ? "not filled"
+                : getDuration().get().toHoursPart() + ":" + getDuration().get().toMinutesPart();
+        return "Task{"
+                + "id=" + id
+                + ", name='" + name + '\''
+                + ", description='" + description + '\''
+                + ", status=" + status
+                + ", startTime=" + strStart
+                + ", duration=" + strDuration
+                + '}';
+    }
+
     // формат для сохранения в файл CSV с разделителем ;
-    // id,type,name,status,description,epic
+    // id;type;status;name;description;epic;start;duration
     // вынесен в отдельный метод т.к. это отдельная задача
     public String toStringForSaving() {
-        return id + ";" + "TASK" + ";" + name  +
-                ";" + status.toString() + ";" + description + ";";
+        String strStart = getStartTime().isEmpty() ? ""
+                : getStartTime().get().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+        String strDuration = getDuration().isEmpty() ? ""
+                : String.valueOf(getDuration().get().toMinutes());
+        return id + ";"
+                + "TASK" + ";"
+                + status.toString() + ";"
+                + name  + ";"
+                + description + ";"
+                + ";"   // epic заполняется только для subtask
+                + strStart + ";"
+                + strDuration;
     }
+
 }
