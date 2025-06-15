@@ -1,5 +1,7 @@
 package ru.tracker.controller;
 
+import ru.tracker.exceptions.ManagerAddTaskException;
+
 import ru.tracker.model.Epic;
 import ru.tracker.model.Subtask;
 import ru.tracker.model.Task;
@@ -52,37 +54,34 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Set<Task> getPrioritizedTasks() {
-        return prioritizedTasks;
+    public List<Task> getPrioritizedTasks() {
+        return new ArrayList<>(prioritizedTasks);
     }
 
-    // чтобы в нескольких методах не прописывать проверку на заполненность optional
-    // сделал не метод проверки пересечений задач, а метод приоритизации задач
-    // который проверяет и наличие дат и пересечений и добавляет в список приоритетов
-    private void prioritize(Task task) {
-        if (task.getStartTime().isEmpty() && task.getDuration().isEmpty()) {
-            return;
-        }
-
-        // optional-ы проверены в предшествующем if
-        for (Task prioritizedTask : prioritizedTasks) {
-            if (prioritizedTask.getEndTime().get().isAfter(task.getStartTime().get())
-                    && prioritizedTask.getStartTime().get().isBefore(task.getEndTime().get())
-            ) {
-                return;
-            }
-        }
-
-        prioritizedTasks.add(task);
+    private boolean hasConflictWithPrioritizedTasks(Task task) {
+        // optional-ы по сути проверены, т.к. в метод будет подаваться задача только с датами
+        return prioritizedTasks.stream()
+                .anyMatch(priorTask -> priorTask.getEndTime().get().isAfter(task.getStartTime().get())
+                        && priorTask.getStartTime().get().isBefore(task.getEndTime().get()));
     }
 
     // МЕТОДЫ ДЛЯ РАБОТЫ С ЗАДАЧАМИ
     @Override
     public Task addTask(Task task) {
+        if (task.getStartTime().isPresent()
+                && task.getDuration().isPresent()
+                && hasConflictWithPrioritizedTasks(task)) {
+            throw new ManagerAddTaskException("Задача пересекается во времени с запланированными ранее задачами.");
+        }
+
         var id = generateTaskId();
         task.setId(id);
         taskList.put(id, task);
-        prioritize(task);
+
+        if (task.getStartTime().isPresent() && task.getDuration().isPresent()) {
+            prioritizedTasks.add(task);
+        }
+
         return task;
     }
 
@@ -97,12 +96,21 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void updateTask(Task task) {
+        if (task.getStartTime().isPresent()
+                && task.getDuration().isPresent()
+                && hasConflictWithPrioritizedTasks(task)) {
+            throw new ManagerAddTaskException("Задача пересекается во времени с запланированными ранее задачами.");
+        }
+
         // из списка приоритизированных удаляем сначала предыдущую версию задачи
         var previousVersion = taskList.get(task.getId());
         if (previousVersion != null) {
             prioritizedTasks.remove(previousVersion);
         }
-        prioritize(task);
+
+        if (task.getStartTime().isPresent() && task.getDuration().isPresent()) {
+            prioritizedTasks.add(task);
+        }
 
         taskList.put(task.getId(), task);
     }
@@ -183,13 +191,23 @@ public class InMemoryTaskManager implements TaskManager {
     // МЕТОДЫ ДЛЯ РАБОТЫ С ПОДЗАДАЧАМИ
     @Override
     public Subtask addSubtask(Subtask subtask, Epic epic) {
+        if (subtask.getStartTime().isPresent()
+                && subtask.getDuration().isPresent()
+                && hasConflictWithPrioritizedTasks(subtask)) {
+            throw new ManagerAddTaskException("Задача пересекается во времени с запланированными ранее задачами.");
+        }
+
         var id = generateTaskId();
         subtask.setId(id);
         // исходим из того, что сама подзадача как простая задача создается где-то во вне,
         // а управление и связка с эпиком обеспечивается ТаскМенеджером
         subtask.setEpicLink(epic);
         subtaskList.put(id, subtask);
-        prioritize(subtask);
+
+        if (subtask.getStartTime().isPresent() && subtask.getDuration().isPresent()) {
+            prioritizedTasks.add(subtask);
+        }
+
         return subtask;
     }
 
@@ -204,11 +222,20 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void updateSubtask(Subtask subtask) {
+        if (subtask.getStartTime().isPresent()
+                && subtask.getDuration().isPresent()
+                && hasConflictWithPrioritizedTasks(subtask)) {
+            throw new ManagerAddTaskException("Задача пересекается во времени с запланированными ранее задачами.");
+        }
+
         var previousVersion = subtaskList.get(subtask.getId());
         if (previousVersion != null) {
             prioritizedTasks.remove(previousVersion);
         }
-        prioritize(subtask);
+
+        if (subtask.getStartTime().isPresent() && subtask.getDuration().isPresent()) {
+            prioritizedTasks.add(subtask);
+        }
 
         subtaskList.put(subtask.getId(), subtask);
     }

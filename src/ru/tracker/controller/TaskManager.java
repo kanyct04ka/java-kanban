@@ -6,14 +6,13 @@ import ru.tracker.model.Task;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 
 public interface TaskManager {
 
     List<Task> getHistory();
 
-    Set<Task> getPrioritizedTasks();
+    List<Task> getPrioritizedTasks();
 
     // МЕТОДЫ ДЛЯ РАБОТЫ С ЗАДАЧАМИ
     Task addTask(Task task);

@@ -66,9 +66,6 @@ public class Epic extends Task {
     }
 
     private void defineStartEndAndDuration() {
-    // для эпика считаю правильней определить по сабтаскам startTime и endTime
-    // а duration считать как весь отрезок времени от начала до окончания эпика
-
     // так как по требованиям ФЗ-8 задачи не могут пересекаться
     // то достаточно отсортировать задачи с заполненными датами
         List<Subtask> subtasksWithTime = subtasks.stream()
@@ -80,7 +77,12 @@ public class Epic extends Task {
         if (!subtasksWithTime.isEmpty()) {
             setStartTime(subtasksWithTime.getFirst().getStartTime().get());
             setEndTime(subtasksWithTime.getLast().getEndTime().get());
-            setDuration(Duration.between(getStartTime().get(), endTime));
+
+            var epicDuration = subtasksWithTime.stream()
+                    .map(subtask -> subtask.getDuration().get())
+                    .reduce(Duration::plus)
+                    .get();
+            setDuration(epicDuration);
         } else {
             setStartTime(null);
             setEndTime(null);

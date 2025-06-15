@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+import ru.tracker.exceptions.ManagerAddTaskException;
 import ru.tracker.model.*;
 
 import java.nio.file.Path;
@@ -51,12 +52,12 @@ public class FileBackedTaskManagerTest {
     }
 
     @Test
-    void loadFromFile_AllTaskTypesAndDifferentTimeCases() {
+    void loadFromFile_AllTaskTypes() {
         taskManager = FileBackedTaskManager.loadFromFile(Path.of("test/static/test_allTaskTypes.csv"));
         // задачи загружены в списки
         assertEquals(1, taskManager.getTaskList().size());
         assertEquals(1, taskManager.getEpicList().size());
-        assertEquals(4, taskManager.getSubtaskList().size());
+        assertEquals(3, taskManager.getSubtaskList().size());
 
         // в списке приоритизированных только с датами и без пересечений
         assertEquals(3, taskManager.getPrioritizedTasks().size());
@@ -66,7 +67,14 @@ public class FileBackedTaskManagerTest {
                 taskManager.getEpic(1).getStartTime().get());
         assertEquals(LocalDateTime.parse("2025-06-15 00:39", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),
                 taskManager.getEpic(1).getEndTime().get());
-        assertEquals(Duration.ofMinutes(639L), taskManager.getEpic(1).getDuration().get());
+        assertEquals(Duration.ofMinutes(24L), taskManager.getEpic(1).getDuration().get());
+    }
+
+    @Test
+    void loadFromFile_ConflictPrioritizedTasks() {
+        assertThrows(ManagerAddTaskException.class,
+                () -> {FileBackedTaskManager.loadFromFile(Path.of("test/static/test_conflictPrioritizedTasks.csv"));},
+                "Задача пересекается во времени с запланированными ранее задачами.");
     }
 
     @Test
