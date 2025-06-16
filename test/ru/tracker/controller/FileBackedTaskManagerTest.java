@@ -4,9 +4,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+import ru.tracker.exceptions.ManagerAddTaskException;
 import ru.tracker.model.*;
 
-import java.io.File;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -21,7 +25,7 @@ public class FileBackedTaskManagerTest {
 
     @Test
     void loadFromFile_EmptyFile() {
-        taskManager = FileBackedTaskManager.loadFromFile(new File("test/static/test_empty.csv"));
+        taskManager = FileBackedTaskManager.loadFromFile(Path.of("test/static/test_empty.csv"));
         assertTrue(taskManager.getTaskList().isEmpty());
         assertTrue(taskManager.getEpicList().isEmpty());
         assertTrue(taskManager.getSubtaskList().isEmpty());
@@ -30,7 +34,7 @@ public class FileBackedTaskManagerTest {
 
     @Test
     void loadFromFile_WithBigTaskId() {
-        taskManager = FileBackedTaskManager.loadFromFile(new File("test/static/test_taskCount.csv"));
+        taskManager = FileBackedTaskManager.loadFromFile(Path.of("test/static/test_taskCount.csv"));
         assertFalse(taskManager.getTaskList().isEmpty());
         assertFalse(taskManager.getEpicList().isEmpty());
         assertEquals(25, taskManager.getTaskCount());
@@ -41,15 +45,41 @@ public class FileBackedTaskManagerTest {
 
     @Test
     void loadFromFile_SubtaskWithoutEpic() {
-        taskManager = FileBackedTaskManager.loadFromFile(new File("test/static/test_subtaskWithoutEpic.csv"));
+        taskManager = FileBackedTaskManager.loadFromFile(Path.of("test/static/test_subtaskWithoutEpic.csv"));
         assertTrue(taskManager.getTaskList().isEmpty());
         assertEquals(1, taskManager.getEpicList().size());
         assertEquals(2, taskManager.getSubtaskList().size());
     }
 
     @Test
+    void loadFromFile_AllTaskTypes() {
+        taskManager = FileBackedTaskManager.loadFromFile(Path.of("test/static/test_allTaskTypes.csv"));
+        // задачи загружены в списки
+        assertEquals(1, taskManager.getTaskList().size());
+        assertEquals(1, taskManager.getEpicList().size());
+        assertEquals(3, taskManager.getSubtaskList().size());
+
+        // в списке приоритизированных только с датами и без пересечений
+        assertEquals(3, taskManager.getPrioritizedTasks().size());
+
+        // даты и длительность эпика рассчитаны
+        assertEquals(LocalDateTime.parse("2025-06-14 14:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),
+                taskManager.getEpic(1).getStartTime().get());
+        assertEquals(LocalDateTime.parse("2025-06-15 00:39", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),
+                taskManager.getEpic(1).getEndTime().get());
+        assertEquals(Duration.ofMinutes(24L), taskManager.getEpic(1).getDuration().get());
+    }
+
+    @Test
+    void loadFromFile_ConflictPrioritizedTasks() {
+        assertThrows(ManagerAddTaskException.class,
+                () -> {FileBackedTaskManager.loadFromFile(Path.of("test/static/test_conflictPrioritizedTasks.csv"));},
+                "Задача пересекается во времени с запланированными ранее задачами.");
+    }
+
+    @Test
     void addTask() {
-        Task task = new Task("task name", "task description", TaskStatus.NEW);
+        Task task = new Task("task name1", "task description", TaskStatus.NEW);
         int id = taskManager.addTask(task).getId();
 
         assertNotNull(taskManager.getTask(id));

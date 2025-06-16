@@ -12,6 +12,8 @@ public interface TaskManager {
 
     List<Task> getHistory();
 
+    List<Task> getPrioritizedTasks();
+
     // МЕТОДЫ ДЛЯ РАБОТЫ С ЗАДАЧАМИ
     Task addTask(Task task);
 

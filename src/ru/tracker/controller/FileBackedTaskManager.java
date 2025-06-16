@@ -2,50 +2,56 @@ package ru.tracker.controller;
 
 import ru.tracker.exceptions.ManagerLoadException;
 import ru.tracker.exceptions.ManagerSaveException;
+import java.io.IOException;
+
 import ru.tracker.model.*;
 
-import java.io.*;
+import java.time.LocalDateTime;
+import java.time.Duration;
+import java.time.format.DateTimeFormatter;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
 
-    private final File backupFile;
+    private final Path backupFile;
 
     public FileBackedTaskManager() {
         super();
         this.backupFile = FileBackedTaskManager.getBackupFile();
     }
 
-    // конструктор для тестов с временным файлом
-    public FileBackedTaskManager(File backupFile) {
-        super();
-        this.backupFile = backupFile;
-    }
-
-    private static File getBackupFile() {
+    private static Path getBackupFile() {
         // пусть у нас будет какая-то логика формирования файла для хранения
         // возможно на основе даты или чего-либо еще
         // пока что просто заглушка
-        return new File("resources/backup.csv");
+        return Path.of("resources/backup.csv");
     }
 
-    public static FileBackedTaskManager loadFromFile(File file) {
+    public static FileBackedTaskManager loadFromFile(Path path) {
+        if (Files.isDirectory(path)) {
+            throw new ManagerLoadException("Указана директория, требуется указать путь к файлу.");
+        }
+
         var fileBackedTaskManager = new FileBackedTaskManager();
 
-        // используется LinkedList чтобы сохранить порядок чтения строк из файла
-        // чтобы при наполнении задач сабтаски шли после эпиков и нормально к ним привязывались
-        // исходим из того что и записываться в файл будет тоже с соблюдением последовательности
-        List<String[]> tasksForUpload = new LinkedList<>();
+        List<String[]> tasksForUpload;
+        try {
+            List<String> lines = Files.readAllLines(path);
 
-        try (var fileReader = new FileReader(file)) {
-            var bufferReader = new BufferedReader(fileReader);
-
-            while (bufferReader.ready()) {
-                String line = bufferReader.readLine();
-                tasksForUpload.add(line.split(";"));
-            }
+            // отбираем из файла только строки с явным указанием типа задач
+            // остальные считаем ошибочными/битыми
+            tasksForUpload = lines.stream()
+                    .filter(line -> line.contains("TASK")
+                            || line.contains("EPIC")
+                            || line.contains("SUBTASK"))
+                    .map(line -> line.split(";", -1))
+                    .toList();
         } catch (IOException exception) {
             throw new ManagerLoadException("Ошибка при чтении из файла: " + exception.getMessage());
         }
@@ -55,12 +61,18 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             for (String[] task : tasksForUpload) {
                 switch (TaskType.valueOf(task[1])) {
                     case TaskType.TASK -> {
-                        var t = new Task(task[2], task[4], TaskStatus.valueOf(task[3]));
+                        var t = new Task(task[3], task[4], TaskStatus.valueOf(task[2]));
                         t.setId(Integer.parseInt(task[0]));
+                        if (!task[6].isBlank()) {
+                            t.setStartTime(LocalDateTime.parse(task[6], DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+                        }
+                        if (!task[7].isBlank()) {
+                            t.setDuration(Duration.ofMinutes(Long.parseLong(task[7])));
+                        }
                         fileBackedTaskManager.updateTask(t);
                     }
                     case TaskType.EPIC -> {
-                        var e = new Epic(task[2], task[4], new ArrayList<Subtask>());
+                        var e = new Epic(task[3], task[4], new ArrayList<Subtask>());
                         e.setId(Integer.parseInt(task[0]));
                         fileBackedTaskManager.updateEpic(e);
                     }
@@ -71,8 +83,14 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                             break;
                         }
 
-                        var s = new Subtask(task[2], task[4], TaskStatus.valueOf(task[3]));
+                        var s = new Subtask(task[3], task[4], TaskStatus.valueOf(task[2]));
                         s.setId(Integer.parseInt(task[0]));
+                        if (!task[6].isBlank()) {
+                            s.setStartTime(LocalDateTime.parse(task[6], DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+                        }
+                        if (!task[7].isBlank()) {
+                            s.setDuration(Duration.ofMinutes(Long.parseLong(task[7])));
+                        }
                         s.setEpicLink(e);
                         fileBackedTaskManager.updateSubtask(s);
                     }
@@ -87,30 +105,33 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     private void save() {
-        // при каждом изменении состояния снепшота файл полностью перезаписывается
-        try (FileWriter fileWriter = new FileWriter(backupFile)) {
-            if (!getTaskList().isEmpty()) {
-                for (Task task : getTaskList()) {
-                    fileWriter.write(task.toStringForSaving() + "\n");
-                }
+        if (!Files.exists(backupFile)) {
+            try {
+                Files.createFile(backupFile);
+            } catch (IOException exception) {
+                throw new ManagerSaveException("Ошибка сохранения снепшота задач в файл: "
+                        + exception.getMessage());
             }
+        }
 
-            if (!getEpicList().isEmpty()) {
-                for (Epic task : getEpicList()) {
-                    fileWriter.write(task.toStringForSaving() + "\n");
-                }
-                // сабтаски проверяем только если в принципе есть эпики
-                // это снимет ошибку если вдруг при отсутствии эпиков остались какие-то сабтаски
-                // и пишем их в последнюю очередь
-                if (!getSubtaskList().isEmpty()) {
-                    for (Subtask task : getSubtaskList()) {
-                        fileWriter.write(task.toStringForSaving() + "\n");
-                    }
-                }
-            }
+        List<String> dataForSaving = new ArrayList<>();
+
+        getTaskList().forEach(task -> dataForSaving.add(task.toStringForSaving()));
+
+        getEpicList().forEach(epic -> {
+            dataForSaving.add(epic.toStringForSaving());
+            // сабтаски пишем только те, что связаны с эпиками
+            // так избежим ошибок, если остались непривязанные сабтаски
+            epic.getSubtasks().forEach(subtask ->
+                dataForSaving.add(subtask.toStringForSaving()));
+        });
+
+        try {
+            // при каждом изменении состояния снепшота файл полностью перезаписывается
+            Files.write(backupFile, dataForSaving, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException exception) {
-            throw new ManagerSaveException("Ошибка сохранения снепшота задач в файл: " +
-                    exception.getMessage());
+            throw new ManagerSaveException("Ошибка сохранения снепшота задач в файл: "
+                    + exception.getMessage());
         }
     }
 

@@ -1,2 +1,2 @@
-11;EPIC;epic name;IN_PROGRESS;epic description;
-25;TASK;task name;NEW;task description;
+11;EPIC;IN_PROGRESS;epic name;epic description;;;
+25;TASK;NEW;task name;task description;;;

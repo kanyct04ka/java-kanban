@@ -1,0 +1,6 @@
+5;TASK;NEW;task name 2;task description2;;2025-06-14 14:20;15
+1;EPIC;IN_PROGRESS;epic name;epic description;;2025-06-14 14:00;639
+2;SUBTASK;NEW;subtask name 1;subtask description 1;1;2025-06-15 00:20;19
+4;SUBTASK;IN_PROGRESS;subtask name 3;subtask description 3;1;2025-06-14 14:00;5
+6;SUBTASK;NEW;subtask name 4;subtask description 4;1;2025-06-14 14:30;20
+7;SUBTASK;NEW;subtask name 5;subtask description 5;1;;
