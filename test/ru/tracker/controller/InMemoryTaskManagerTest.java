@@ -8,6 +8,8 @@ import ru.tracker.model.TaskStatus;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -15,6 +17,30 @@ import java.util.Collection;
 class InMemoryTaskManagerTest {
 
     TaskManager taskManager = Managers.getDefault();
+
+    @Test
+    void updateSubtaskSameTime() {
+        Epic epic = new Epic("epic name", "epic description", new ArrayList<Subtask>());
+        int idEpic = taskManager.addEpic(epic).getId();
+
+        Subtask subtask1 = new Subtask("subtask name 1", "subtask description 1", TaskStatus.NEW);
+        subtask1.setStartTime(LocalDateTime.of(2025, 01, 05, 12, 25));
+        subtask1.setDuration(Duration.ofMinutes(15L));
+        int id1 = taskManager.addSubtask(subtask1, epic).getId();
+
+        assertEquals(1, taskManager.getPrioritizedTasks().size());
+        System.out.println(taskManager.getPrioritizedTasks());
+
+        Subtask subtask2 = new Subtask("subtask name 2", "subtask description 2", TaskStatus.NEW);
+        subtask2.setStartTime(LocalDateTime.of(2025, 01, 05, 12, 25));
+        subtask2.setDuration(Duration.ofMinutes(15L));
+        subtask2.setId(subtask1.getId());
+        subtask2.setEpicLink(epic);
+
+        taskManager.updateSubtask(subtask2);
+        assertEquals(1, taskManager.getPrioritizedTasks().size());
+        System.out.println(taskManager.getPrioritizedTasks());
+    }
 
     @Test
     void addTask() {

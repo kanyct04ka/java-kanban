@@ -61,8 +61,12 @@ public class InMemoryTaskManager implements TaskManager {
     private boolean hasConflictWithPrioritizedTasks(Task task) {
         // optional-ы по сути проверены, т.к. в метод будет подаваться задача только с датами
         return prioritizedTasks.stream()
-                .anyMatch(priorTask -> priorTask.getEndTime().get().isAfter(task.getStartTime().get())
-                        && priorTask.getStartTime().get().isBefore(task.getEndTime().get()));
+                .anyMatch(priorTask -> (priorTask.getEndTime().get().isAfter(task.getStartTime().get())
+                        && priorTask.getStartTime().get().isBefore(task.getEndTime().get()))
+                        || (priorTask.getStartTime().get().isAfter(task.getStartTime().get())
+                        && priorTask.getEndTime().get().isBefore(task.getEndTime().get()))
+                        || (priorTask.getEndTime().get().isAfter(task.getEndTime().get())
+                        && priorTask.getStartTime().get().isBefore(task.getStartTime().get())));
     }
 
     // МЕТОДЫ ДЛЯ РАБОТЫ С ЗАДАЧАМИ
@@ -96,16 +100,21 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void updateTask(Task task) {
-        if (task.getStartTime().isPresent()
-                && task.getDuration().isPresent()
-                && hasConflictWithPrioritizedTasks(task)) {
-            throw new ManagerAddTaskException("Задача пересекается во времени с запланированными ранее задачами.");
-        }
-
         // из списка приоритизированных удаляем сначала предыдущую версию задачи
         var previousVersion = taskList.get(task.getId());
         if (previousVersion != null) {
             prioritizedTasks.remove(previousVersion);
+        }
+
+        if (task.getStartTime().isPresent()
+                && task.getDuration().isPresent()
+                && hasConflictWithPrioritizedTasks(task)) {
+            // если есть пересечения возвращаем предыдущую версию
+            if (previousVersion != null) {
+                prioritizedTasks.add(previousVersion);
+            }
+            throw new ManagerAddTaskException("Задача пересекается во времени с запланированными ранее задачами. "
+                    + "Обвноление невозможно.");
         }
 
         if (task.getStartTime().isPresent() && task.getDuration().isPresent()) {
@@ -222,15 +231,18 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void updateSubtask(Subtask subtask) {
-        if (subtask.getStartTime().isPresent()
-                && subtask.getDuration().isPresent()
-                && hasConflictWithPrioritizedTasks(subtask)) {
-            throw new ManagerAddTaskException("Задача пересекается во времени с запланированными ранее задачами.");
-        }
-
         var previousVersion = subtaskList.get(subtask.getId());
         if (previousVersion != null) {
             prioritizedTasks.remove(previousVersion);
+        }
+
+        if (subtask.getStartTime().isPresent()
+                && subtask.getDuration().isPresent()
+                && hasConflictWithPrioritizedTasks(subtask)) {
+            if (previousVersion != null) {
+                prioritizedTasks.add(previousVersion);
+            }
+            throw new ManagerAddTaskException("Задача пересекается во времени с запланированными ранее задачами.");
         }
 
         if (subtask.getStartTime().isPresent() && subtask.getDuration().isPresent()) {
