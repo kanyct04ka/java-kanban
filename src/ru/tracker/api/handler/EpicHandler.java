@@ -32,7 +32,7 @@ public class EpicHandler extends BaseHttpHandler implements HttpHandler {
             case GET_EPIC_SUBTASKS -> handleGetEpicSubtasks(exchange);
             case POST_EPIC -> handlePostEpic(exchange);
             case DELETE_EPIC -> handleDeleteEpic(exchange);
-            case UNKNOWN -> sendNotFound(exchange);
+            case UNKNOWN -> sendMethodNotAllowed(exchange);
         }
     }
 

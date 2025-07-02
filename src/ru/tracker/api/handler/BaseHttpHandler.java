@@ -43,6 +43,11 @@ public class BaseHttpHandler {
         exchange.close();
     }
 
+    protected void sendMethodNotAllowed(HttpExchange exchange) throws IOException {
+        exchange.sendResponseHeaders(405, 0);
+        exchange.close();
+    }
+
     protected void sendHasInteractions(HttpExchange exchange) throws IOException {
         byte[] response = "Задача пересекается с запланированными ранее!".getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().add("Content-Type", "text/plain;charset=utf-8");

@@ -36,7 +36,7 @@ public class SubtaskHandler extends BaseHttpHandler implements HttpHandler {
             case GET_SUBTASKS -> handleGetSubtasks(exchange);
             case POST_SUBTASK -> handlePostSubtask(exchange);
             case DELETE_SUBTASK -> handleDeleteSubtask(exchange);
-            case UNKNOWN -> sendNotFound(exchange);
+            case UNKNOWN -> sendMethodNotAllowed(exchange);
         }
     }
 

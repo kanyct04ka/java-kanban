@@ -33,7 +33,7 @@ public class TaskHandlerTest extends HttpTaskServerTest {
                 .build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        assertEquals(404, response.statusCode());
+        assertEquals(405, response.statusCode());
         assertEquals(0, taskManager.getTaskList().size());
         assertEquals(0, taskManager.getPrioritizedTasks().size());
         assertEquals(0, taskManager.getHistory().size());

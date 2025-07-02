@@ -34,7 +34,7 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
             case GET_TASKS -> handleGetTasks(exchange);
             case POST_TASK -> handlePostTask(exchange);
             case DELETE_TASK -> handleDeleteTask(exchange);
-            case UNKNOWN -> sendNotFound(exchange);
+            case UNKNOWN -> sendMethodNotAllowed(exchange);
         }
     }
 
