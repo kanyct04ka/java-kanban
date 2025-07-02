@@ -19,10 +19,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class TaskHandler extends BaseHttpHandler implements HttpHandler {
-    private final TaskManager taskManager;
 
     public TaskHandler(TaskManager taskManager) {
-        this.taskManager = taskManager;
+        super(taskManager);
     }
 
     @Override

@@ -16,10 +16,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 public class EpicHandler extends BaseHttpHandler implements HttpHandler {
-    private final TaskManager taskManager;
 
     public EpicHandler(TaskManager taskManager) {
-        this.taskManager = taskManager;
+        super(taskManager);
     }
 
     @Override

@@ -7,6 +7,7 @@ import ru.tracker.api.adapters.DurationAdapter;
 import ru.tracker.api.adapters.EpicAdapter;
 import ru.tracker.api.adapters.LocalDateTimeAdapter;
 import ru.tracker.api.adapters.SubtaskAdapter;
+import ru.tracker.controller.TaskManager;
 import ru.tracker.model.Epic;
 import ru.tracker.model.Subtask;
 
@@ -17,9 +18,11 @@ import java.time.LocalDateTime;
 
 
 public class BaseHttpHandler {
+    protected final TaskManager taskManager;
     protected final Gson gson;
 
-    public BaseHttpHandler() {
+    public BaseHttpHandler(TaskManager taskManager) {
+        this.taskManager = taskManager;
         gson = new GsonBuilder()
                 .serializeNulls()
                 .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
