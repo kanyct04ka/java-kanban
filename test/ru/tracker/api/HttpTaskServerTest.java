@@ -9,8 +9,6 @@ import ru.tracker.api.adapters.DurationAdapter;
 import ru.tracker.api.adapters.LocalDateTimeAdapter;
 import ru.tracker.controller.Managers;
 import ru.tracker.controller.TaskManager;
-import ru.tracker.model.Task;
-import ru.tracker.model.TaskStatus;
 
 import java.io.IOException;
 
@@ -22,7 +20,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 public class HttpTaskServerTest {
     protected TaskManager taskManager = Managers.getDefault();
@@ -33,7 +31,7 @@ public class HttpTaskServerTest {
             .registerTypeAdapter(Duration.class, new DurationAdapter())
             .create();
 
-    public HttpTaskServerTest() throws IOException, InterruptedException {
+    public HttpTaskServerTest() throws IOException {
     }
 
     @BeforeEach
