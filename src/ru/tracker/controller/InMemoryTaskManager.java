@@ -200,8 +200,8 @@ public class InMemoryTaskManager implements TaskManager {
     // МЕТОДЫ ДЛЯ РАБОТЫ С ПОДЗАДАЧАМИ
     @Override
     public Subtask addSubtask(Subtask subtask, Epic epic) {
-        if (epic.getId() != 0
-                && epic == epicList.get(epic.getId())) {
+        if (epicList.get(epic.getId()) == null
+                || epic != epicList.get(epic.getId())) {
             throw new ManagerAddTaskException("Указанного эпика не существует!");
         }
 
